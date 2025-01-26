@@ -1,26 +1,80 @@
-import { View, Text, TouchableOpacity, KeyboardAvoidingView, Image, ImageProps, StyleSheet, TextInput, Platform } from 'react-native'
+import { View, Text, TouchableOpacity, KeyboardAvoidingView, Image, ImageProps, StyleSheet, TextInput, Platform, Alert, ActivityIndicator } from 'react-native'
 import React from 'react'
 import { useLocalSearchParams, useRouter, useSearchParams } from 'expo-router/build/hooks'
 import { defaultStyles } from '@/constants/Style'
 import { AntDesign } from '@expo/vector-icons'
 import { Logo } from '@/constants/Image'
 import { Controller, useForm } from 'react-hook-form'
-import { auth } from '@/libs/schema/auth'
+import { authSchema } from '@/libs/schema/auth'
 import { zodResolver } from "@hookform/resolvers/zod"
 import Colors from '@/constants/Colors'
+import { authType } from '@/libs/types/auth'
+import auth, { createUserWithEmailAndPassword } from "firebase/auth"
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+
 
 const index = () => {
     const { type } = useLocalSearchParams<{ type: string }>()
 
     const router = useRouter()
 
-    const { control, handleSubmit, formState: { errors } } = useForm({
-        resolver: zodResolver(auth),
+    const { control, handleSubmit, formState: { errors,isSubmitting } } = useForm({
+        resolver: zodResolver(authSchema),
         defaultValues: {
             email: "",
             password: ""
         }
     })
+
+    const login = (data: authType) => {
+
+        const auth = getAuth();
+        signInWithEmailAndPassword(auth, data.email, data.password)
+            .then((userCredential) => {
+                // Signed in 
+                const user = userCredential.user;
+                // ...
+            })
+            .catch((error) => {
+                const errorCode = error.code;
+                const errorMessage = error.message;
+                console.log(errorCode, errorMessage)
+                if (errorCode === "auth/configuration-not-found") {
+                    Alert.alert("Authentication Error", "Invalid Login Details")
+                }
+                if (errorCode === "auth/network-request-failed") {
+                    Alert.alert("Internet Error", "No Internet Connection")
+                }
+            });
+    }
+
+    const signUp = (data: authType) => {
+        const auth = getAuth();
+        createUserWithEmailAndPassword(auth, data.email, data.password)
+            .then((userCredential) => {
+                // Signed in 
+                const user = userCredential.user;
+                // ...
+            })
+            .catch((error) => {
+                const errorCode = error.code;
+                const errorMessage = error.message;
+                console.log(errorCode, errorMessage)
+                if (errorCode === "auth/network-request-failed") {
+                    Alert.alert("Internet Error", "No Internet Connection")
+                }
+            });
+
+    }
+
+    const onSubmit = (data: authType) => {
+
+        if (type === "login") {
+            login(data)
+        } else {
+            signUp(data)
+        }
+    }
 
     return (
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{
@@ -68,8 +122,8 @@ const index = () => {
                                 <View style={style.inputContainer}>
 
                                     <TextInput
-                                    autoCapitalize="none"
-                                    underlineColorAndroid="off"
+                                        autoCapitalize="none"
+                                        underlineColorAndroid="off"
                                         placeholder="Email"
                                         style={style.input}
                                         keyboardType='email-address'
@@ -81,8 +135,15 @@ const index = () => {
 
                             )}
                             name="email"
-                        />
-                        {errors.email && <Text>This is required.</Text>}
+                        /><View style={{
+                            width: "100%"
+                        }}>
+                            {errors.email && <Text style={{
+                                color: "red",
+                                fontSize: 12
+                            }}>{errors.email.message}</Text>}
+
+                        </View>
                         <Controller
                             control={control}
                             rules={{
@@ -105,24 +166,35 @@ const index = () => {
                             )}
                             name="password"
                         />
-                        {errors.email && <Text>This is required.</Text>}
+                        <View style={{
+                            width: "100%"
+                        }}>
+                            {errors.password && <Text style={{
+                                color: "red",
+                                fontSize: 12
+                            }}>{errors.password.message}</Text>}
+
+                        </View>
 
                     </View>
 
                     <View style={{
                         marginTop: 20,
-                        width:"100%"
+                        width: "100%"
                     }}>
 
 
-                        {type === "login" ?
-                            <TouchableOpacity style={[defaultStyles.btn, { backgroundColor: Colors.primary,width:"100%" }]}>
-                                <Text style={{fontSize:16,fontWeight:"600"}}>Login</Text>
+                        <TouchableOpacity onPress={handleSubmit(onSubmit)} style={[defaultStyles.btn, { 
+                            gap:4,
+                            backgroundColor: Colors.primary, width: "100%" }]}>
+                            {type === "login" ?
+                                <Text style={{ fontSize: 16, fontWeight: "600" }}>Login</Text>
+                                : <Text style={{ fontSize: 16, fontWeight: "600" }}>SignUp</Text>
+                            } 
+                            {isSubmitting && <ActivityIndicator color={Colors.grey} style={{
+                                marginLeft:6
+                            }}/>}
                             </TouchableOpacity>
-                            : <TouchableOpacity style={[defaultStyles.btn, { backgroundColor: Colors.primary }]}>
-                                <Text style={{fontSize:16,fontWeight:"600"}}>SignUp</Text>
-                            </TouchableOpacity>
-                        }
                     </View>
                 </View>
             </View>
