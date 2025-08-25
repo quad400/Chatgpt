@@ -1,6 +1,6 @@
 import { View, Text, TouchableOpacity, KeyboardAvoidingView, Image, ImageProps, StyleSheet, TextInput, Platform, Alert, ActivityIndicator } from 'react-native'
-import React from 'react'
-import { useLocalSearchParams, useRouter, useSearchParams } from 'expo-router/build/hooks'
+import React, { useState } from 'react'
+import { useLocalSearchParams, useRouter } from 'expo-router/build/hooks'
 import { defaultStyles } from '@/constants/Style'
 import { AntDesign } from '@expo/vector-icons'
 import { Logo } from '@/constants/Image'
@@ -9,13 +9,12 @@ import { authSchema } from '@/libs/schema/auth'
 import { zodResolver } from "@hookform/resolvers/zod"
 import Colors from '@/constants/Colors'
 import { authType } from '@/libs/types/auth'
-import auth, { createUserWithEmailAndPassword } from "firebase/auth"
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import auth from '@react-native-firebase/auth';
 
 
 const index = () => {
     const { type } = useLocalSearchParams<{ type: string }>()
-
+    const [loading, setLoading] = useState(false)
     const router = useRouter()
 
     const { control, handleSubmit, formState: { errors,isSubmitting } } = useForm({
@@ -27,55 +26,69 @@ const index = () => {
     })
 
     const login = (data: authType) => {
-
-        const auth = getAuth();
-        signInWithEmailAndPassword(auth, data.email, data.password)
-            .then((userCredential) => {
-                // Signed in 
-                const user = userCredential.user;
-                // ...
-            })
-            .catch((error) => {
-                const errorCode = error.code;
-                const errorMessage = error.message;
-                console.log(errorCode, errorMessage)
-                if (errorCode === "auth/configuration-not-found") {
+        setLoading(true)
+        auth()
+        .signInWithEmailAndPassword(data.email, data.password)
+        .then((userCredential) => {
+            
+            router.replace("/(main)/(drawer)")
+        })
+        .catch((error) => {
+            const errorCode = error.code;
+            const errorMessage = error.message;
+            
+                if (errorCode === "auth/email-already-in-use") {
+                    Alert.alert("Authentication Error", "Invalid Login Details")
+                }
+                if (errorCode === "auth/invalid-email") {
                     Alert.alert("Authentication Error", "Invalid Login Details")
                 }
                 if (errorCode === "auth/network-request-failed") {
                     Alert.alert("Internet Error", "No Internet Connection")
                 }
-            });
-    }
-
-    const signUp = (data: authType) => {
-        const auth = getAuth();
-        createUserWithEmailAndPassword(auth, data.email, data.password)
+            }).finally(()=>{
+                setLoading(false)
+            })
+        }
+        
+        const signUp = (data: authType) => {
+            setLoading(true)
+            
+            auth().
+            createUserWithEmailAndPassword(data.email, data.password)
             .then((userCredential) => {
                 // Signed in 
                 const user = userCredential.user;
+                router.replace("/(main)/(drawer)")
                 // ...
             })
             .catch((error) => {
                 const errorCode = error.code;
                 const errorMessage = error.message;
                 console.log(errorCode, errorMessage)
+                if (errorCode === "auth/email-already-in-use") {
+                    Alert.alert("Authentication Error", "Invalid Login Details")
+                }
+                if (errorCode === "auth/invalid-email") {
+                    Alert.alert("Authentication Error", "Invalid Login Details")
+                }
                 if (errorCode === "auth/network-request-failed") {
                     Alert.alert("Internet Error", "No Internet Connection")
                 }
-            });
+            }).finally(()=>{
+                setLoading(false)
+            })
 
     }
 
     const onSubmit = (data: authType) => {
-
         if (type === "login") {
             login(data)
         } else {
             signUp(data)
         }
     }
-
+// console.log(isSubmitting)
     return (
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{
             flex: 1
@@ -123,7 +136,7 @@ const index = () => {
 
                                     <TextInput
                                         autoCapitalize="none"
-                                        underlineColorAndroid="off"
+                                        // underlineColorAndroid="off"
                                         placeholder="Email"
                                         style={style.input}
                                         keyboardType='email-address'
@@ -191,7 +204,7 @@ const index = () => {
                                 <Text style={{ fontSize: 16, fontWeight: "600" }}>Login</Text>
                                 : <Text style={{ fontSize: 16, fontWeight: "600" }}>SignUp</Text>
                             } 
-                            {isSubmitting && <ActivityIndicator color={Colors.grey} style={{
+                            {loading && <ActivityIndicator color={Colors.grey} style={{
                                 marginLeft:6
                             }}/>}
                             </TouchableOpacity>
