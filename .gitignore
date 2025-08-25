@@ -5,10 +5,13 @@ node_modules/
 
 # Expo
 .expo/
+ios/
+android/
 dist/
 web-build/
 expo-env.d.ts
-
+google-services.json
+GoogleService-Info.plist
 # Native
 *.orig.*
 *.jks

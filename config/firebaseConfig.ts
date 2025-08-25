@@ -1,19 +1,21 @@
-import { initializeApp } from 'firebase/app';
-import { getAuth } from "firebase/auth";
+// Import the functions you need from the SDKs you need
+import { initializeApp, } from "firebase/app";
 import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
 
+import { getAuth, initializeAuth } from "firebase/auth";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyBV-ooo61EW1ZaA8-95rmsN_bK93Ec8qaQ",
-    authDomain: "chatgpt-56242.firebaseapp.com",
-    projectId: "chatgpt-56242",
-    storageBucket: "chatgpt-56242.firebasestorage.app",
-    messagingSenderId: "548507119151",
-    appId: "1:548507119151:web:72225649da6f4aba59a0da",
-    measurementId: "G-T0SX3F9XZ6"
-  };
-  
-  
+  apiKey: "AIzaSyBkbO3h3gP_6RBpgl7jcVd9poF53gL-g4A",
+  authDomain: "chatgpt-64415.firebaseapp.com",
+  projectId: "chatgpt-64415",
+  storageBucket: "chatgpt-64415.firebasestorage.app",
+  messagingSenderId: "348621128135",
+  appId: "1:348621128135:web:d2d523a5f05794bde719e2"
+};
 
-  const app = initializeApp(firebaseConfig);
-
-  export const auth = getAuth(app);
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);

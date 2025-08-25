@@ -23,8 +23,8 @@ export default function Index() {
           gap: 14
         }}>
 
-          <Link href="/">
-            <TouchableOpacity style={[defaultStyles.btn, style.btn, style.google]}>
+          <Link href="/" style={[defaultStyles.btn, style.btn, style.google]} asChild>
+            <TouchableOpacity >
               <AntDesign style={{
                 marginRight: 6
               }} name="google" size={24} color="black" />
@@ -32,7 +32,7 @@ export default function Index() {
             </TouchableOpacity>
           </Link>
 
-          <Link href="/(auth)?type=signup" style={[defaultStyles.btn, style.btn, { backgroundColor: Colors.dark }]} asChild>
+          <Link href="/(auth)/auth?type=signup" style={[defaultStyles.btn, style.btn, { backgroundColor: Colors.dark }]} asChild>
             <TouchableOpacity >
               <Text style={[style.text]}>Sign up</Text>
             </TouchableOpacity>
@@ -42,7 +42,7 @@ export default function Index() {
             height: 1,
             backgroundColor: Colors.greyLight
           }} />
-          <Link href="/(auth)?type=login" style={[defaultStyles.btn, style.btn, { backgroundColor: Colors.dark, borderWidth: 1, borderColor: Colors.greyLight }]} asChild>
+          <Link href="/(auth)/auth?type=login" style={[defaultStyles.btn, style.btn, { backgroundColor: Colors.dark, borderWidth: 1, borderColor: Colors.greyLight }]} asChild>
             <TouchableOpacity >
               <Text style={[style.text]}>Log in</Text>
             </TouchableOpacity>

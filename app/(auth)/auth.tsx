@@ -9,15 +9,17 @@ import { authSchema } from '@/libs/schema/auth'
 import { zodResolver } from "@hookform/resolvers/zod"
 import Colors from '@/constants/Colors'
 import { authType } from '@/libs/types/auth'
-import auth from '@react-native-firebase/auth';
+import { createUserWithEmailAndPassword, getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { saveUserToStorage } from '@/libs/auth'
 
 
 const index = () => {
     const { type } = useLocalSearchParams<{ type: string }>()
     const [loading, setLoading] = useState(false)
     const router = useRouter()
+    const auth = getAuth();
 
-    const { control, handleSubmit, formState: { errors,isSubmitting } } = useForm({
+    const { control, handleSubmit, formState: { errors, isSubmitting } } = useForm({
         resolver: zodResolver(authSchema),
         defaultValues: {
             email: "",
@@ -27,16 +29,17 @@ const index = () => {
 
     const login = (data: authType) => {
         setLoading(true)
-        auth()
-        .signInWithEmailAndPassword(data.email, data.password)
-        .then((userCredential) => {
-            
-            router.replace("/(main)/(drawer)")
-        })
-        .catch((error) => {
-            const errorCode = error.code;
-            const errorMessage = error.message;
-            
+
+        signInWithEmailAndPassword(auth, data.email, data.password)
+            .then((userCredential) => {
+                console.log(userCredential.user)
+saveUserToStorage(userCredential.user);
+                router.replace("/chat/new")
+            })
+            .catch((error) => {
+                const errorCode = error.code;
+                const errorMessage = error.message;
+
                 if (errorCode === "auth/email-already-in-use") {
                     Alert.alert("Authentication Error", "Invalid Login Details")
                 }
@@ -46,20 +49,19 @@ const index = () => {
                 if (errorCode === "auth/network-request-failed") {
                     Alert.alert("Internet Error", "No Internet Connection")
                 }
-            }).finally(()=>{
+            }).finally(() => {
                 setLoading(false)
             })
-        }
-        
-        const signUp = (data: authType) => {
-            setLoading(true)
-            
-            auth().
-            createUserWithEmailAndPassword(data.email, data.password)
+    }
+
+    const signUp = (data: authType) => {
+        setLoading(true)
+
+        createUserWithEmailAndPassword(auth, data.email, data.password)
             .then((userCredential) => {
                 // Signed in 
                 const user = userCredential.user;
-                router.replace("/(main)/(drawer)")
+                router.replace("/(main)/(drawer)/new")
                 // ...
             })
             .catch((error) => {
@@ -75,7 +77,7 @@ const index = () => {
                 if (errorCode === "auth/network-request-failed") {
                     Alert.alert("Internet Error", "No Internet Connection")
                 }
-            }).finally(()=>{
+            }).finally(() => {
                 setLoading(false)
             })
 
@@ -88,7 +90,7 @@ const index = () => {
             signUp(data)
         }
     }
-// console.log(isSubmitting)
+    // console.log(isSubmitting)
     return (
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{
             flex: 1
@@ -197,17 +199,18 @@ const index = () => {
                     }}>
 
 
-                        <TouchableOpacity onPress={handleSubmit(onSubmit)} style={[defaultStyles.btn, { 
-                            gap:4,
-                            backgroundColor: Colors.primary, width: "100%" }]}>
+                        <TouchableOpacity onPress={handleSubmit(onSubmit)} style={[defaultStyles.btn, {
+                            gap: 4,
+                            backgroundColor: Colors.primary, width: "100%"
+                        }]}>
                             {type === "login" ?
                                 <Text style={{ fontSize: 16, fontWeight: "600" }}>Login</Text>
                                 : <Text style={{ fontSize: 16, fontWeight: "600" }}>SignUp</Text>
-                            } 
+                            }
                             {loading && <ActivityIndicator color={Colors.grey} style={{
-                                marginLeft:6
-                            }}/>}
-                            </TouchableOpacity>
+                                marginLeft: 6
+                            }} />}
+                        </TouchableOpacity>
                     </View>
                 </View>
             </View>
